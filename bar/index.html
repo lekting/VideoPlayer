@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+   <head>
+        <link href="https://cdn.redlix.net/app/videojs/video-js.min.css" rel="stylesheet" />
+        <link href="./style.css" rel="stylesheet"/>
+        <link href="./boxes.css" rel="stylesheet">
+
+        <script>
+            if (typeof module === 'object') {
+                window.module = module;
+                module = undefined;
+            }
+        </script>
+
+        <script type="text/javascript" src="https://cdn.redlix.net/app-assets/jquery.js"></script>
+        <script type="text/javascript" src="https://kit.fontawesome.com/c6ff20a3c5.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./subtitlesComponent.js"></script>
+        <script type="text/javascript" src="./alloha.js"></script>
+        <script type="text/javascript" src="./js/subtitles-octopus.js"></script>
+        <script type="text/javascript" src="./js/jquery.mousewheel.min.js"></script>
+        <script type="text/javascript" src="./bar.js"></script>
+
+        <script> if (window.module) module = window.module; </script>
+        <title>VideoPlayer</title>
+   </head>
+   <body>
+        <div class="app">
+            <div class="title_bar_frame">
+                <div class="title_bar_appname">
+                    <span class="two">VideoPlayer</span>
+                </div>
+                <div class="btns_box">
+                    <span class="maxBtn" id="min-btn"></span>
+                    <span class="minBtn" id="max-btn"></span>
+                    <span class="closeBtn" id="close-btn"></span>
+                </div>
+            </div>
+            <div class="under_title">
+                <div class="content">
+                    <div class="anime-page" style="display: none;">
+                        <div class="page-content">
+                            <div class="page-content-b">
+                                <div class="upper_content"></div>
+                                <div class="down_content"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="yummy-catalog">
+                        <div class="catalog-items">
+                            <div class="searchbar" style="display: none;"><input type="text" placeholder="Введите текст"><button><i class="fas fa-search"></i></button></div>
+                            <div class="pages" style="display: none;"><ul class="series"></ul></div>
+                            <div class="catalog-itemsv2"></div>
+                            <div class="pages" style="display: none;"><ul class="series"></ul></div>
+                        </div>
+                    </div>
+                    <div class="drophere" style="display: none;">
+                        <p class="dropherep">DROP HERE TO PLAY VIDEO</p>
+                    </div>
+
+                    <video id="my-video" class="video-js"></video>
+
+                    <div class="down-menu">
+                        <div class="menu">
+                            <div class="items">
+                                <ul>
+                                    <li class="menu-item anime"><p><img src="img/yummy.png"></p></li>
+                                    <li class="menu-item"><p><i class="fas fa-film"></i></p></li>
+                                    <li class="menu-item local active"><p><i class="fas fa-folder"></i></p></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subtitlesblock" class="subtitles" style="display: none;">
+                    <div id="original"></div>
+                    <div id="hiragana"></div>
+                </div>
+                <div id="notifications"><div class="text"></div></div>
+                <div id="returntolist" class="returntolist"><</div>
+                
+                <div class="context_menu" style="display: none;">
+                    <div class="context_menu_block">
+                        <ul class="items">
+                            <li class="contenxt_menu_item set_offset">Установить оффсет</li>
+                            <li class="line"></li>
+                            <li class="contenxt_menu_item set_own_url_bs">Установить свою ссылку</li>
+                            <!-- <li class="line"></li>
+                            <li class="contenxt_menu_item">Установить оффсет</li> -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal set_offset">
+                    <div class="modal_shadow"></div>
+                    <div class="centered_modal">
+                        <div class="modal_content">
+                            <input class="inputes" placeholder="Введите оффсет">
+                            <div class="btn blue set_offset_js"><p>Установить</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal loader">
+                    <div class="modal_shadow"></div>
+                    <div class="centered_modal">
+                        <div class="boxes">
+                            <div class="box"><div></div><div></div><div></div></div>
+                            <div class="box"><div></div><div></div><div></div></div>
+                            <div class="box"><div></div><div></div><div></div></div>
+                            <div class="box"><div></div><div></div><div></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal set_own_url">
+                    <div class="modal_shadow"></div>
+                    <div class="centered_modal">
+                        <div class="modal_content">
+                            <input class="inputes" placeholder="Введите ссылку">
+                            <div class="btn blue set_own_url_js"><p>Установить</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+      <script src="https://cdn.redlix.net/app/videojs/video.min.js"></script>
+   </body>
+</html>
