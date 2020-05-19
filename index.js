@@ -19,7 +19,7 @@ app.on('ready', () => {
         }
     });
 
-    let tray = new Tray('./icon.ico');
+    /*let tray = new Tray('./icon.ico');
 
     tray.setToolTip('VideoPlayer by lekting');
     tray.setContextMenu(Menu.buildFromTemplate([
@@ -36,7 +36,7 @@ app.on('ready', () => {
                 app.quit();
             }
         }
-    ]));
+    ]));*/
 
     win.loadURL(`file://${__dirname}/bar/index.html`);
 

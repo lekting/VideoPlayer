@@ -538,6 +538,9 @@ function getYummyPage(url) {
 
         genres.forEach(li => {
             let a = $($(li).find('a'));
+			if(!a.html())
+				return;
+			
             anime_info.genres.push({ link: a.attr('href'), name: escapeUnicode(a.html()).trim() });
         });
 
