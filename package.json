@@ -1,6 +1,6 @@
 {
   "name": "videoplayer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,6 @@
     "cheerio": "^1.0.0-rc.3",
     "cloudscraper": "^4.6.0",
     "crypto-js": "^4.0.0",
-    "electron": "^8.3.0",
     "electron-json-storage": "^4.1.8",
     "file-type": "^13.1.2",
     "form-urlencoded": "^4.1.3",

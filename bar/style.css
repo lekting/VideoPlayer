@@ -380,6 +380,16 @@ video {
 	color: #fff;
 }
 
+.mb-0 {
+	margin-bottom: 0 !important;
+}
+
+.wrong {
+	display: none;
+	margin: 10px 0;
+    color: #ff6363;
+}
+
 .btn {
 	background: #3CA374;
 	padding: 9px;

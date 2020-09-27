@@ -12,7 +12,8 @@ let settings = {
     own_url: '',
     volume: 1,
     anime_lists: [],
-    saved_anime: []
+    saved_anime: [],
+    cookies: ''
 }
 
 let lines               = [],
@@ -493,16 +494,55 @@ function getYummyPage(url) {
     */
     return new Promise(async (resolve, reject) => {
         let $ = '';
+
+        let new_cookies = '';
         try {
-            $ = await cloudscraper.get('https://yummyanime.club' + url);
+
+            $ = await cloudscraper.get({
+                uri: mainurl + url,
+                resolveWithFullResponse: true,
+                headers: {
+                  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+                  'cookie': settings.cookies
+                },
+            });
+
+            new_cookies = settings.cookies + $.headers['set-cookie'].join(' ;');
     
-            $ = cheerio.load($);
+            $ = cheerio.load($.body);
         } catch(ex) {
             reject('Невозможно пройти CloudFlare');
             return;
         }
+
+        let csrf = $('meta[name="csrf-token"]').attr('content');
+        let anime_id = $('#anime_id').val();
+        
+        let pressed_episodes = await cloudscraper.post({
+            uri: mainurl + '/get-pressed-episodes',
+            headers: {
+                'accept': '*/*',
+                'accept-encoding': 'gzip, deflate, br',
+                'accept-language': 'ru,ja;q=0.9,ru-RU;q=0.8,en-US;q=0.7,en;q=0.6,uk;q=0.5,und;q=0.4',
+                'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'cookie': new_cookies,
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+                'x-csrf-token': csrf,
+            },
+            formData: { anime_id: anime_id }
+        });
+
+        console.log(new_cookies);
+        console.log(csrf);
+
+        if(pressed_episodes)
+            pressed_episodes = JSON.parse(pressed_episodes);
         
         let anime_info = {};
+
+        console.log(pressed_episodes);
+        
+        anime_info.pressed_episodes = pressed_episodes.status ? pressed_episodes.pressedButtons : [];
     
         anime_info.title = escapeUnicode($('.anime-page h1').html()).trim();
         anime_info.poster = $('.poster-block img').attr('src');
@@ -572,15 +612,17 @@ function getYummyPage(url) {
 
                 if(link.includes('youtube'))
                     return;
+
+                let block_id = $($(button).parent()).attr('data-id');
     
-                if(link.includes('allohastream'))
-                    anime_info.players.push({ type: 'alloha', translator: translator, link: link, serie: $(button).html() });
+                let player_type = 'alloha';
     
                 if(link.includes('aniqit') || link.includes('kodik'))
-                    anime_info.players.push({ type: 'kodik', translator: translator, link: link, serie: $(button).html() });
+                    player_type = 'kodik';
+                else if(link.includes('sibnet.ru'))
+                    player_type = 'sibnet';
 
-                if(link.includes('sibnet.ru'))
-                    anime_info.players.push({ type: 'sibnet', translator: translator, link: link, serie: $(button).html() });
+                anime_info.players.push({ block_id: block_id, type: player_type, translator: translator, link: link, serie: $(button).html() });
             });
         });
 
@@ -758,7 +800,8 @@ async function loadAnimeCatalog(page, search) {
             </div>`);
         });
 
-        function loadTranslators(anime_link, players, player) {
+        function loadTranslators(anime_link, info, player) {
+            let players = info.players;
             console.log('loading translators for ' + player);
             let already = [];
 
@@ -797,7 +840,7 @@ async function loadAnimeCatalog(page, search) {
 
             console.log('current_translator = ' + current_translator)
 
-            loadSeries(anime_link, players, current_translator, player);
+            loadSeries(anime_link, info, current_translator, player);
 
             if($('.select-menu.translators').length === 0)
                 loadDropDown($('.down_content .translators'));
@@ -805,7 +848,7 @@ async function loadAnimeCatalog(page, search) {
             $('.select-menu.translators > ul > li').on('click', (e) => {
                 let curr = $(e.currentTarget);
 
-                loadSeries(anime_link, players, curr.html(), player);
+                loadSeries(anime_link, info, curr.html(), player);
             });
         }
 
@@ -817,7 +860,8 @@ async function loadAnimeCatalog(page, search) {
             return undefined;
         }
 
-        function loadSeries(anime_link, players, current_translator, type_player) {
+        function loadSeries(anime_link, info, current_translator, type_player) {
+            let players = info.players;
             console.log('loading series for ' + type_player + ' with ' + current_translator);
 
             if($('.down_content .series').length === 0)
@@ -830,7 +874,17 @@ async function loadAnimeCatalog(page, search) {
                 if(player.type !== type_player || player.translator !== current_translator)
                     return;
 
-                $('.down_content .series').append(`<li data-href="${player.link}" data-player="${player.type}" class="serie` + (saved_anime && saved_anime.translator === current_translator && saved_anime.player === type_player && saved_anime.last_serie == player.serie ? ' active' : '') + `">${player.serie}</li>`);
+                let is_pressed = false;
+                if(info.pressed_episodes.length > 0) {
+                    for(let pressed of info.pressed_episodes) {
+                        if(pressed.block_id == player.block_id && player.serie == pressed.episode_id) {
+                            is_pressed = true;
+                            break;
+                        }
+                    }
+                }
+
+                $('.down_content .series').append(`<li data-href="${player.link}" data-player="${player.type}" class="serie` + (is_pressed ? ' active' : (saved_anime && saved_anime.translator === current_translator && saved_anime.player === type_player && saved_anime.last_serie == player.serie ? ' active' : '')) + `">${player.serie}</li>`);
             });
 
             /* Действие, при нажатии на серию */
@@ -935,7 +989,7 @@ async function loadAnimeCatalog(page, search) {
                 $('.down_content .players').append(`<option` + (saved_anime && saved_anime.player === player ? ' selected' : '') + `>${player}</option>`);
 
                 if((saved_anime && saved_anime.player === player) || !saved_anime && index === 0)
-                    loadTranslators(anime_link, info.players, player);
+                    loadTranslators(anime_link, info, player);
             });
 
             loadDropDown($('.down_content .players'));
@@ -943,7 +997,7 @@ async function loadAnimeCatalog(page, search) {
             $('.select-menu.players > ul > li').on('click', (e) => {
                 let curr = $(e.currentTarget);
 
-                loadTranslators(anime_link, info.players, curr.html());
+                loadTranslators(anime_link, info, curr.html());
             });
 
             $('.yummy-catalog').hide();
@@ -1083,8 +1137,8 @@ onload = async () => {
     });
 
     function makeContextDefault(e) {
-        openModal('loader');
         e.preventDefault();
+        openModal('loader');
 
         $('.down-menu .items .active').removeClass('active');
 
@@ -1103,13 +1157,46 @@ onload = async () => {
         closeModal('loader');
     });
 
+    $('.account').on('click', (e) => {
+        e.preventDefault();
+        openModal('account');
+    });
+
     /* Действие при нажатии на иконку аниме в нижнем меню */
     $('.anime').on('click', async (e) => {
         makeContextDefault(e);
 
         loadAnimeCatalog();
         
-        //console.log(anime_list);
+        console.log('here');
+    });
+
+    $('.account .auth_user').on('click', async (e) => {
+        e.preventDefault();
+
+        $('.account .wrong').hide();
+
+        let url = 'email=' + encodeURIComponent($('.account .inputes.login').val()) + '&password=' + $('.account .inputes.password').val();
+        makePostRequest(mainurl + '/login', url, (data) => {
+            let headers = data.headers['set-cookie'];
+
+            for(let url of headers) {
+                if(url.includes('remember_web')) {
+
+                    settings.cookies = '';
+                    for(let brl of headers) {
+                        let splitted = brl.split(';');
+                        settings.cookies += splitted[0] + ' ;';
+                    }
+
+                    saveSettings();
+                    closeModal('account');
+                    return;
+                }
+            }
+
+            $('.account .wrong').show();
+        });
     });
 
     /* Действие при нажатии на "установить" в модалке "установить ссылку" */
@@ -1151,7 +1238,7 @@ onload = async () => {
         if(parent.hasClass('loader'))
             return;
 
-        parent.css('display', '');
+        closeModal(parent[0].classList[1]);
     });
 
     /* Действие при нажатии на "установить свою ссылку" */
@@ -1210,8 +1297,8 @@ onload = async () => {
     }, async function onPlayerReady() {
         player = this;
 
-        getVideos();
-        getSubtitlesFiles();
+        /* getVideos();
+        getSubtitlesFiles(); */
 
         /* Каждые 25 секунд получаем новый список видео и т.д */
         setInterval(() => {

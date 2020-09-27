@@ -10,7 +10,7 @@ app.on('ready', () => {
         minHeight: 500,
         minWidth: 940,
         backgroundColor: '#fff',
-        icon: __dirname + '/logo.png',
+        //icon: __dirname + '/logo.png',
         frame: false,
         transparent: false,
         show: false,
